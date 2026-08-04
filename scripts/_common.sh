@@ -27,6 +27,11 @@ _ejabberd_configure() {
     # shellcheck disable=SC2034
     http_upload_size=$(ynh_app_setting_get --key=http_upload_size)
 
+    # XEP-0157 server contact address (config panel field), empty by default
+    ynh_app_setting_set_default --key=xmpp_contact_address --value=""
+    # shellcheck disable=SC2034
+    xmpp_contact_address=$(ynh_app_setting_get --key=xmpp_contact_address)
+
     ynh_print_info "Adding ejabberd configuration files..."
 
     mkdir -p "$data_dir/upload"

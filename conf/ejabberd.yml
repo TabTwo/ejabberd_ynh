@@ -15,6 +15,15 @@ define_macro:
     - "no_tlsv1_1"
     - "cipher_server_preference"
     - "no_compression"
+  # XEP-0157 server contact address (config panel field, empty by default).
+  # Always defined (even when empty) so the config panel can bind directly to this
+  # scalar line via ynh_write_var_in_file; ejabberd resolves the macro reference in
+  # mod_disco.server_info.urls below. Note: when empty, this advertises a single
+  # empty-string URL rather than omitting the server_info entry entirely (this
+  # simple templating format has no conditional-block mechanism to drop the whole
+  # entry) -- harmless (valid, schema-conforming), just not a perfectly empty disco
+  # response. See final-review.md fix report for the full rationale.
+  'XMPP_CONTACT_ADDRESS': "__XMPP_CONTACT_ADDRESS__"
 
 c2s_protocol_options: 'TLS_OPTIONS'
 s2s_protocol_options: 'TLS_OPTIONS'
@@ -79,8 +88,6 @@ listen:
       /upload: mod_http_upload
       /ws: ejabberd_http_ws
 
-s2s_direct_tls_ports: [__PORT_SERVER2__]
-
 acl:
   local:
     user_regexp: ""
@@ -117,7 +124,14 @@ modules:
   mod_carboncopy: {}
   mod_client_state: {}
   mod_configure: {}
-  mod_disco: {}
+  mod_disco:
+    # XEP-0157 server contact address; 'XMPP_CONTACT_ADDRESS' macro is defined above
+    # (empty string by default). See the config-panel field xmpp_contact_address.
+    server_info:
+      -
+        modules: all
+        name: "admin-addresses"
+        urls: ['XMPP_CONTACT_ADDRESS']
   mod_http_api: {}
   mod_http_upload:
     put_url: "https://@HOST@:__PORT_HTTP__/upload"
@@ -158,17 +172,21 @@ modules:
   mod_stream_mgmt: {resend_on_timeout: if_offline}
   mod_stun_disco:
     credentials_lifetime: 12h
+    # _common.sh reads coturn's port_turnserver_tls (TLS-listening port), so these
+    # services must be advertised as TLS variants: type stuns/turns with transport
+    # tcp (per ejabberd docs: "The default is udp for non-TLS services and tcp for
+    # TLS services" for mod_stun_disco.services[].transport).
     services:
       -
         host: __TURN_HOST__
         port: __TURN_PORT__
-        type: stun
-        transport: udp
+        type: stuns
+        transport: tcp
       -
         host: __TURN_HOST__
         port: __TURN_PORT__
-        type: turn
-        transport: udp
+        type: turns
+        transport: tcp
         secret: "__TURN_SECRET__"
   mod_vcard: {search: false}
   mod_vcard_xupdate: {}

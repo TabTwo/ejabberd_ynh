@@ -28,7 +28,10 @@ _ejabberd_configure
 ynh_script_progression "Integrating service in YunoHost..."
 
 # Register the app permission group referenced by the LDAP filter (cn=ejabberd.main)
-yunohost user permission update main --add all_users
+# ynh_permission_update resolves "main" to "$app.main" internally (i.e. "ejabberd.main"),
+# unlike the raw `yunohost user permission update` CLI which would append ".main" to the
+# literal string passed, producing the nonexistent permission "main.main".
+ynh_permission_update --permission=main --add=all_users
 
 yunohost service add "$app" --log="/var/log/$app/ejabberd.log" \
     --needs_exposed_ports "$port_client" "$port_client2" "$port_server" "$port_server2" "$port_http" "$port_proxy"

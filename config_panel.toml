@@ -6,50 +6,31 @@ name.fr = "Configuration ejabberd"
 
 services = [ "ejabberd", ]
 
-    [main.message_archive]
-    name.en = "Message Archive Management"
-    name.fr = "Archivage des messages"
+    [main.upload]
+    name.en = "File sharing"
+    name.fr = "Partage de fichiers"
 
-        [main.message_archive.enable_mam]
-        ask.en = "Enable message archiving (MAM)"
-        ask.fr = "Activer l'archivage des messages (MAM)"
-        type = "boolean"
-        yes = "true"
-        no = "false"
-        bind = ":/etc/ejabberd/ejabberd.yml"
+        [main.upload.http_upload_size]
+        ask.en = "Maximum size per shared file"
+        ask.fr = "Taille maximale d'un fichier partagé"
+        type = "select"
+        choices."10485760" = "10 MiB"
+        choices."20971520" = "20 MiB"
+        choices."52428800" = "50 MiB"
+        choices."104857600" = "100 MiB"
+        choices."209715200" = "200 MiB"
+        choices."524288000" = "500 MiB"
+        bind = "max_size:/etc/ejabberd/ejabberd.yml"
 
-    [main.offline_messages]
-    name.en = "Offline messages"
-    name.fr = "Messages hors ligne"
+    [main.contact]
+    name.en = "Server contact"
+    name.fr = "Contact du serveur"
 
-        [main.offline_messages.enable_offline]
-        ask.en = "Store messages for offline users"
-        ask.fr = "Stocker les messages pour les utilisateurs hors ligne"
-        type = "boolean"
-        yes = "true"
-        no = "false"
-        bind = ":/etc/ejabberd/ejabberd.yml"
-
-    [main.server_federation]
-    name.en = "Server federation"
-    name.fr = "Fédération serveur"
-
-        [main.server_federation.enable_s2s]
-        ask.en = "Enable server-to-server federation"
-        ask.fr = "Activer la fédération serveur-à-serveur"
-        type = "boolean"
-        yes = "true"
-        no = "false"
-        bind = ":/etc/ejabberd/ejabberd.yml"
-
-    [main.security]
-    name.en = "Security"
-    name.fr = "Sécurité"
-
-        [main.security.require_starttls]
-        ask.en = "Require STARTTLS for client connections"
-        ask.fr = "Exiger STARTTLS pour les connexions clientes"
-        type = "boolean"
-        yes = "true"
-        no = "false"
-        bind = ":/etc/ejabberd/ejabberd.yml"
+        [main.contact.xmpp_contact_address]
+        ask.en = "Contact address (XEP-0157)"
+        ask.fr = "Adresse de contact (XEP-0157)"
+        help.en = "Advertised as the server contact (XEP-0157). Enter an address you actually receive, e.g. mailto:you@example.org; leave empty to advertise none."
+        help.fr = "Annoncée comme contact du serveur (XEP-0157). Entrez une adresse que vous recevez réellement, par ex. mailto:vous@example.org ; laissez vide pour n'en annoncer aucune."
+        type = "string"
+        default = ""
+        bind = "XMPP_CONTACT_ADDRESS:/etc/ejabberd/ejabberd.yml"

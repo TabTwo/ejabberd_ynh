@@ -1,0 +1,16 @@
+# This script is expected to be called xx-$app
+# shellcheck disable=SC2154 # domain and YNH_STDRETURN are provided by the YunoHost hook-calling context
+app=$(basename "$0" | cut -d- -f2)
+app_domain=$(yunohost app setting "$app" domain)
+
+if [[ "$domain" != "$app_domain" ]]
+then
+    exit 0
+fi
+
+cat << EOF >> "$YNH_STDRETURN"
+- conference
+- pubsub
+- upload
+- proxy
+EOF
