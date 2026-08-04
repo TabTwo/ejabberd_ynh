@@ -1,0 +1,55 @@
+version = "1.0"
+
+[main]
+name.en = "ejabberd configuration"
+name.fr = "Configuration ejabberd"
+
+services = [ "ejabberd", ]
+
+    [main.message_archive]
+    name.en = "Message Archive Management"
+    name.fr = "Archivage des messages"
+
+        [main.message_archive.enable_mam]
+        ask.en = "Enable message archiving (MAM)"
+        ask.fr = "Activer l'archivage des messages (MAM)"
+        type = "boolean"
+        yes = "true"
+        no = "false"
+        bind = ":/etc/ejabberd/ejabberd.yml"
+
+    [main.offline_messages]
+    name.en = "Offline messages"
+    name.fr = "Messages hors ligne"
+
+        [main.offline_messages.enable_offline]
+        ask.en = "Store messages for offline users"
+        ask.fr = "Stocker les messages pour les utilisateurs hors ligne"
+        type = "boolean"
+        yes = "true"
+        no = "false"
+        bind = ":/etc/ejabberd/ejabberd.yml"
+
+    [main.server_federation]
+    name.en = "Server federation"
+    name.fr = "Fédération serveur"
+
+        [main.server_federation.enable_s2s]
+        ask.en = "Enable server-to-server federation"
+        ask.fr = "Activer la fédération serveur-à-serveur"
+        type = "boolean"
+        yes = "true"
+        no = "false"
+        bind = ":/etc/ejabberd/ejabberd.yml"
+
+    [main.security]
+    name.en = "Security"
+    name.fr = "Sécurité"
+
+        [main.security.require_starttls]
+        ask.en = "Require STARTTLS for client connections"
+        ask.fr = "Exiger STARTTLS pour les connexions clientes"
+        type = "boolean"
+        yes = "true"
+        no = "false"
+        bind = ":/etc/ejabberd/ejabberd.yml"
