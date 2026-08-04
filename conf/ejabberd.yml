@@ -169,6 +169,7 @@ modules:
         port: __TURN_PORT__
         type: turn
         transport: udp
+        secret: "__TURN_SECRET__"
   mod_vcard: {search: false}
   mod_vcard_xupdate: {}
   mod_version: {}

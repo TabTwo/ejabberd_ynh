@@ -1,0 +1,53 @@
+#!/bin/bash
+
+# shellcheck disable=SC1091,SC2154 # helpers + app/domain/data_dir/port_* are provided by the YunoHost runtime
+# Keep this path for calling _common.sh inside the execution context of backup and restore scripts
+source ../settings/scripts/_common.sh
+source /usr/share/yunohost/helpers
+
+#=================================================
+# STOP EJABBERD
+#=================================================
+
+ynh_systemctl --service="$app" --action="stop"
+
+#=================================================
+# RESTORE EVERYTHING THAT WAS BACKED UP
+#=================================================
+# ejabberd.yml, /var/lib/ejabberd (mnesia), $data_dir, the nginx conf and
+# well-known/host-meta all get restored verbatim to their original paths.
+ynh_script_progression "Restoring the app files..."
+
+ynh_restore_everything
+
+#=================================================
+# RE-RENDER CONFIG (coturn secret / ports may have changed since backup time)
+#=================================================
+# shellcheck disable=SC2154 # data_dir is set by the YunoHost helpers environment
+ynh_script_progression "Reconfiguring ejabberd and NGINX..."
+
+_ejabberd_configure
+
+chown -R ejabberd:ejabberd /var/lib/ejabberd "$data_dir"
+
+#=================================================
+# INTEGRATE SERVICE IN YUNOHOST
+#=================================================
+ynh_script_progression "Integrating service in YunoHost..."
+
+yunohost service add "$app" --log="/var/log/$app/ejabberd.log" \
+    --needs_exposed_ports "$port_client" "$port_client2" "$port_server" "$port_server2" "$port_http" "$port_proxy"
+
+#=================================================
+# RESTART SERVICES
+#=================================================
+ynh_script_progression "Restarting the systemd service..."
+
+ynh_systemctl --service="$app" --action="restart" --wait_until="is started"
+ynh_systemctl --service="nginx" --action="reload"
+
+#=================================================
+# END OF SCRIPT
+#=================================================
+
+ynh_script_progression "Restoration completed for $app"

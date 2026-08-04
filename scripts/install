@@ -1,0 +1,49 @@
+#!/bin/bash
+
+# shellcheck disable=SC1091,SC2154 # helpers + domain/port_* are provided by the YunoHost runtime
+source _common.sh
+source /usr/share/yunohost/helpers
+
+#=================================================
+# ENSURE COTURN IS INSTALLED (STUN/TURN for A/V calls, mod_stun_disco)
+#=================================================
+# (waiting for packaging v3 app-to-app dependency management)
+if ! yunohost app list | grep -q "id: coturn"; then
+    ynh_print_info "Coturn is not installed. Installing..."
+    yunohost tools update
+    yunohost app install coturn --force --args "domain=$domain"
+fi
+
+#=================================================
+# ADD CONFIGURATION FILES
+#=================================================
+ynh_script_progression "Configuring ejabberd and NGINX..."
+
+# ejabberd (apt package, see resources.apt) installed by YunoHost core before this script runs.
+_ejabberd_configure
+
+#=================================================
+# INTEGRATE SERVICE IN YUNOHOST
+#=================================================
+ynh_script_progression "Integrating service in YunoHost..."
+
+# Register the app permission group referenced by the LDAP filter (cn=ejabberd.main)
+yunohost user permission update main --add all_users
+
+yunohost service add "$app" --log="/var/log/$app/ejabberd.log" \
+    --needs_exposed_ports "$port_client" "$port_client2" "$port_server" "$port_server2" "$port_http" "$port_proxy"
+
+#=================================================
+# START SYSTEMD SERVICE
+#=================================================
+ynh_script_progression "Restarting the systemd service..."
+
+ynh_systemctl --service="$app" --action="restart" --wait_until="is started"
+
+ynh_systemctl --service="nginx" --action="reload"
+
+#=================================================
+# END OF SCRIPT
+#=================================================
+
+ynh_script_progression "Installation of $app completed"

@@ -1,0 +1,40 @@
+#!/bin/bash
+
+# shellcheck disable=SC1091,SC2154 # helpers + app/domain/data_dir are provided by the YunoHost runtime
+# Keep this path for calling _common.sh inside the execution context of backup and restore scripts
+source ../settings/scripts/_common.sh
+source /usr/share/yunohost/helpers
+
+# shellcheck disable=SC2154 # domain, data_dir are set by the YunoHost helpers environment
+ynh_print_info "Declaring files to be backed up..."
+
+#=================================================
+# BACKUP THE CONFIG DIR
+#=================================================
+
+ynh_backup "$config_path"
+
+#=================================================
+# BACKUP THE MNESIA SPOOL (accounts, roster, MAM)
+#=================================================
+
+ynh_backup "/var/lib/$app"
+
+#=================================================
+# BACKUP THE HTTP UPLOAD DATA
+#=================================================
+
+ynh_backup "$data_dir"
+
+#=================================================
+# BACKUP NGINX + WELL-KNOWN
+#=================================================
+
+ynh_backup "/etc/nginx/conf.d/${domain}.d/ejabberd.conf"
+ynh_backup "/var/www/.well-known/${domain}/host-meta"
+
+#=================================================
+# END OF SCRIPT
+#=================================================
+
+ynh_print_info "Backup script completed for $app. (YunoHost will now actually copy those files to the archive)."
