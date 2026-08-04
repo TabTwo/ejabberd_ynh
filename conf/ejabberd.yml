@@ -172,10 +172,12 @@ modules:
   mod_stream_mgmt: {resend_on_timeout: if_offline}
   mod_stun_disco:
     credentials_lifetime: 12h
-    # _common.sh reads coturn's port_turnserver_tls (TLS-listening port), so these
-    # services must be advertised as TLS variants: type stuns/turns with transport
-    # tcp (per ejabberd docs: "The default is udp for non-TLS services and tcp for
-    # TLS services" for mod_stun_disco.services[].transport).
+    # coturn shares a REST auth secret (turnserver_pwd); ejabberd generates matching
+    # temporary TURN credentials from it. `secret` is a module-level option (not
+    # per-service); the TURN service is marked `restricted` so it requires them.
+    # _common.sh reads coturn's port_turnserver_tls, so services are the TLS variants
+    # (type stuns/turns, transport tcp).
+    secret: "__TURN_SECRET__"
     services:
       -
         host: __TURN_HOST__
@@ -187,7 +189,7 @@ modules:
         port: __TURN_PORT__
         type: turns
         transport: tcp
-        secret: "__TURN_SECRET__"
+        restricted: true
   mod_vcard: {search: false}
   mod_vcard_xupdate: {}
   mod_version: {}
