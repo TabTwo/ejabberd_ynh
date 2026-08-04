@@ -35,7 +35,7 @@ ldap_encrypt: none
 ldap_port: 389
 ldap_base: "ou=users,dc=yunohost,dc=org"
 ldap_uids:
-  - "uid": "%u"
+  uid: "%u"
 ldap_filter: "(permission=cn=__APP__.main,ou=permission,dc=yunohost,dc=org)"
 
 disable_sasl_mechanisms:
