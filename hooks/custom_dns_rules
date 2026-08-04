@@ -1,0 +1,11 @@
+#!/bin/bash
+cat <<EOF
+_xmpp-client._tcp 3600 IN SRV 0 5 __PORT_CLIENT__ __DOMAIN__.
+_xmpp-server._tcp 3600 IN SRV 0 5 __PORT_SERVER__ __DOMAIN__.
+_xmpps-client._tcp 3600 IN SRV 0 5 __PORT_CLIENT2__ __DOMAIN__.
+_xmpps-server._tcp 3600 IN SRV 0 5 __PORT_SERVER2__ __DOMAIN__.
+conference 3600 IN CNAME __DOMAIN__.
+pubsub 3600 IN CNAME __DOMAIN__.
+upload 3600 IN CNAME __DOMAIN__.
+proxy 3600 IN CNAME __DOMAIN__.
+EOF

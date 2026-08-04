@@ -1,0 +1,33 @@
+#!/bin/bash
+
+# shellcheck disable=SC1091,SC2154 # helpers + domain/port_* are provided by the YunoHost runtime
+source _common.sh
+source /usr/share/yunohost/helpers
+
+#=================================================
+# ADD CONFIGURATION FILES
+#=================================================
+ynh_script_progression "Configuring ejabberd and NGINX..."
+
+ynh_systemctl --service="$app" --action="stop"
+
+# Re-render config idempotently. mnesia spool (/var/lib/ejabberd) is untouched.
+_ejabberd_configure
+
+yunohost service add "$app" --log="/var/log/$app/ejabberd.log" \
+    --needs_exposed_ports "$port_client" "$port_client2" "$port_server" "$port_server2" "$port_http" "$port_proxy"
+
+#=================================================
+# RESTART SYSTEMD SERVICE
+#=================================================
+ynh_script_progression "Restarting $app's systemd service..."
+
+ynh_systemctl --service="$app" --action="restart" --wait_until="is started"
+
+ynh_systemctl --service="nginx" --action="reload"
+
+#=================================================
+# END OF SCRIPT
+#=================================================
+
+ynh_script_progression "Upgrade of $app completed"

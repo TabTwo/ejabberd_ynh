@@ -1,0 +1,36 @@
+version = "1.0"
+
+[main]
+name.en = "ejabberd configuration"
+name.fr = "Configuration ejabberd"
+
+services = [ "ejabberd", ]
+
+    [main.upload]
+    name.en = "File sharing"
+    name.fr = "Partage de fichiers"
+
+        [main.upload.http_upload_size]
+        ask.en = "Maximum size per shared file"
+        ask.fr = "Taille maximale d'un fichier partagé"
+        type = "select"
+        choices."10485760" = "10 MiB"
+        choices."20971520" = "20 MiB"
+        choices."52428800" = "50 MiB"
+        choices."104857600" = "100 MiB"
+        choices."209715200" = "200 MiB"
+        choices."524288000" = "500 MiB"
+        bind = "max_size:/etc/ejabberd/ejabberd.yml"
+
+    [main.contact]
+    name.en = "Server contact"
+    name.fr = "Contact du serveur"
+
+        [main.contact.xmpp_contact_address]
+        ask.en = "Contact address (XEP-0157)"
+        ask.fr = "Adresse de contact (XEP-0157)"
+        help.en = "Advertised as the server contact (XEP-0157). Enter an address you actually receive, e.g. mailto:you@example.org; leave empty to advertise none."
+        help.fr = "Annoncée comme contact du serveur (XEP-0157). Entrez une adresse que vous recevez réellement, par ex. mailto:vous@example.org ; laissez vide pour n'en annoncer aucune."
+        type = "string"
+        default = ""
+        bind = "XMPP_CONTACT_ADDRESS:/etc/ejabberd/ejabberd.yml"
