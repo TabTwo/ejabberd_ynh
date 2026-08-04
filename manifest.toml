@@ -1,0 +1,64 @@
+packaging_format = 2
+
+id = "ejabberd"
+name = "ejabberd"
+description.en = "Robust, scalable and modular XMPP server"
+description.fr = "Serveur XMPP robuste, scalable et modulaire"
+
+version = "24.12~ynh1"
+
+maintainers = ["TabTwo"]
+
+[upstream]
+license = "GPL-2.0-only"
+website = "https://www.ejabberd.im/"
+admindoc = "https://docs.ejabberd.im/"
+code = "https://github.com/processone/ejabberd"
+cpe = "cpe:2.3:a:process-one:ejabberd"
+
+[integration]
+yunohost = ">= 12.0"
+helpers_version = "2.1"
+architectures = "all"
+multi_instance = false
+ldap = true
+sso = false          # XMPP clients auth via LDAP directly, not the SSO portal
+disk = "50M"
+ram.build = "50M"
+ram.runtime = "256M"
+
+[install]
+    [install.domain]
+    type = "domain"
+
+[resources]
+    [resources.system_user]
+
+    [resources.install_dir]
+
+    [resources.data_dir]
+
+    [resources.permissions]
+
+    [resources.ports]
+    client.default = 5222
+    client.exposed = "TCP"
+    client.fixed = true
+    client2.default = 5223
+    client2.exposed = "TCP"
+    client2.fixed = true
+    server.default = 5269
+    server.exposed = "TCP"
+    server.fixed = true
+    server2.default = 5270
+    server2.exposed = "TCP"
+    server2.fixed = true
+    http.default = 5443
+    http.exposed = "TCP"
+    http.fixed = true
+    proxy.default = 7777
+    proxy.exposed = "TCP"
+    proxy.fixed = true
+
+    [resources.apt]
+    packages = "ejabberd"
