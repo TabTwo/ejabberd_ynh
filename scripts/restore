@@ -44,6 +44,11 @@ yunohost service add "$app" --log="/var/log/$app/ejabberd.log" \
 ynh_script_progression "Restarting the systemd service..."
 
 ynh_systemctl --service="$app" --action="restart" --wait_until="is started"
+
+# XEP-0485: the contrib module lives under install_dir (not in the backup), so
+# reinstate it now that the node is up -- otherwise it silently vanishes on restore.
+_ejabberd_install_contrib_modules
+
 ynh_systemctl --service="nginx" --action="reload"
 
 #=================================================
