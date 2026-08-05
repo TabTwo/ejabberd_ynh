@@ -50,6 +50,8 @@ _ejabberd_configure() {
     mkdir -p "/var/www/.well-known/${domain}"
     ynh_config_add --template="well-known_host-meta.xml" --destination="/var/www/.well-known/${domain}/host-meta"
     chmod 644 "/var/www/.well-known/${domain}/host-meta"
+    ynh_config_add --template="well-known_host-meta.json" --destination="/var/www/.well-known/${domain}/host-meta.json"
+    chmod 644 "/var/www/.well-known/${domain}/host-meta.json"
 
     # ejabberd must be able to read the YunoHost-managed certs
     usermod -aG ssl-cert ejabberd || true
