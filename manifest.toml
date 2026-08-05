@@ -5,7 +5,7 @@ name = "ejabberd"
 description.en = "Robust, scalable and modular XMPP server"
 description.fr = "Serveur XMPP robuste, scalable et modulaire"
 
-version = "24.12~ynh5"
+version = "24.12~ynh6"
 
 maintainers = ["TabTwo"]
 
@@ -18,10 +18,13 @@ cpe = "cpe:2.3:a:process-one:ejabberd"
 
 [integration]
 # ejabberd is installed via apt (resources.apt), so the actual ejabberd version
-# tracks whatever the host's Debian release ships, not this floor directly -- this
-# floor is about the minimum YunoHost helpers/resource-system version required, not
-# a guarantee of ejabberd 24.12. Mirrors prosody_ynh's floor convention.
-yunohost = ">= 12.0.9"
+# tracks whatever the host's Debian release ships. This app's ejabberd.yml uses
+# 24.12-era features (mod_muc_occupantid, mod_stun_disco, mod_http_upload
+# custom_headers) that only exist in the ejabberd shipped by Debian 13 (trixie);
+# bookworm's older ejabberd would fail to start. Trixie == YunoHost 13, so the floor
+# is 13.0. (Trixie/YNH13 is still the unstable branch as of this writing -- the only
+# branch package_check will build for trixie.)
+yunohost = ">= 13.0"
 helpers_version = "2.1"
 architectures = "all"
 multi_instance = false
