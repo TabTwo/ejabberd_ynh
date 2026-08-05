@@ -5,7 +5,7 @@ name = "ejabberd"
 description.en = "Robust, scalable and modular XMPP server"
 description.fr = "Serveur XMPP robuste, scalable et modulaire"
 
-version = "24.12~ynh4"
+version = "24.12~ynh5"
 
 maintainers = ["TabTwo"]
 
@@ -65,4 +65,6 @@ ram.runtime = "256M"
     proxy.fixed = true
 
     [resources.apt]
-    packages = "ejabberd"
+    # git: fetches ejabberd-contrib sources for mod_pubsub_serverinfo (XEP-0485);
+    # the module is pure Erlang, compiled by erlc from erlang-base (ejabberd dep).
+    packages = "ejabberd, git"

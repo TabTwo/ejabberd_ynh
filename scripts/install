@@ -43,6 +43,9 @@ ynh_script_progression "Restarting the systemd service..."
 
 ynh_systemctl --service="$app" --action="restart" --wait_until="is started"
 
+# XEP-0485: install the ejabberd-contrib module now that the node is up (live-node command)
+_ejabberd_install_contrib_modules
+
 ynh_systemctl --service="nginx" --action="reload"
 
 #=================================================

@@ -56,3 +56,30 @@ _ejabberd_configure() {
     # ejabberd must be able to read the YunoHost-managed certs
     usermod -aG ssl-cert ejabberd || true
 }
+
+# XEP-0485 (PubSub Server Information): install the ejabberd-contrib module
+# mod_pubsub_serverinfo. It is pure Erlang, compiled at install time by erlc (from
+# erlang-base, a hard ejabberd dependency -- no build-essential/erlang-dev needed);
+# `git` (resources.apt) fetches the ejabberd-contrib sources. `module_install` is a
+# live-node command, so this MUST run while ejabberd is up. The enablement persists
+# across restarts via ~ejabberd/.ejabberd-modules, so the module is intentionally
+# NOT listed in ejabberd.yml -- listing an as-yet-uncompiled module would abort
+# startup (chicken-and-egg). Every step is non-fatal: a fetch/compile failure must
+# not sink the whole install over one cosmetic, informational XEP.
+_ejabberd_install_contrib_modules() {
+    ynh_print_info "Installing ejabberd-contrib module mod_pubsub_serverinfo (XEP-0485)..."
+    if ! ejabberdctl modules_update_specs; then
+        ynh_print_warn "Could not refresh ejabberd-contrib specs; skipping XEP-0485 module."
+        return 0
+    fi
+    # Fresh install -> module_install; already present (upgrade) -> module_upgrade to
+    # recompile against the current ejabberd (apt may have bumped it).
+    if ejabberdctl modules_installed | grep -q '^mod_pubsub_serverinfo'; then
+        ejabberdctl module_upgrade mod_pubsub_serverinfo \
+            || ynh_print_warn "Could not upgrade mod_pubsub_serverinfo (XEP-0485)."
+    else
+        ejabberdctl module_install mod_pubsub_serverinfo \
+            || ynh_print_warn "Could not install mod_pubsub_serverinfo (XEP-0485)."
+    fi
+    return 0
+}

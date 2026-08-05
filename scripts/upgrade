@@ -24,6 +24,9 @@ ynh_script_progression "Restarting $app's systemd service..."
 
 ynh_systemctl --service="$app" --action="restart" --wait_until="is started"
 
+# XEP-0485: recompile/refresh the ejabberd-contrib module against the (possibly bumped) ejabberd
+_ejabberd_install_contrib_modules
+
 ynh_systemctl --service="nginx" --action="reload"
 
 #=================================================
