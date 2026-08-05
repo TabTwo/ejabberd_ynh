@@ -130,6 +130,10 @@ modules:
     server_info:
       -
         modules: all
+        name: "abuse-addresses"
+        urls: ['XMPP_CONTACT_ADDRESS']
+      -
+        modules: all
         name: "admin-addresses"
         urls: ['XMPP_CONTACT_ADDRESS']
   mod_http_api: {}
