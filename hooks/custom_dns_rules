@@ -1,11 +1,58 @@
 #!/bin/bash
-cat <<EOF
-_xmpp-client._tcp 3600 IN SRV 0 5 __PORT_CLIENT__ __DOMAIN__.
-_xmpp-server._tcp 3600 IN SRV 0 5 __PORT_SERVER__ __DOMAIN__.
-_xmpps-client._tcp 3600 IN SRV 0 5 __PORT_CLIENT2__ __DOMAIN__.
-_xmpps-server._tcp 3600 IN SRV 0 5 __PORT_SERVER2__ __DOMAIN__.
-conference 3600 IN CNAME __DOMAIN__.
-pubsub 3600 IN CNAME __DOMAIN__.
-upload 3600 IN CNAME __DOMAIN__.
-proxy 3600 IN CNAME __DOMAIN__.
+#
+# YunoHost custom_dns_rules hook. Core installs this as
+# /etc/yunohost/hooks.d/custom_dns_rules/50-ejabberd and calls it while building a
+# domain's DNS config (yunohost domain dns suggest / push), passing $base_domain
+# and $suffix in the environment. Records are returned as YAML written to
+# $YNH_STDRETURN (NOT printed to stdout). Ports are the app's fixed ports
+# (manifest [resources.ports], all fixed=true), so they are hard-coded here --
+# this hook runs at DNS-build time, long after install, so it cannot read
+# install-time port_* variables.
+
+# Recover the app id from this hook's own filename (NN-<app>).
+app=$(basename "$0" | cut -d- -f2)
+domain=$(yunohost app setting "$app" domain)
+
+# Only emit records for the zone this app's domain belongs to. Loose suffix match
+# (prosody style) so records are still attached when the XMPP domain is a
+# subdomain of the registered zone (e.g. anton.example.de under example.de).
+if [[ "$domain" != *"$base_domain" ]]; then
+    exit 0
+fi
+
+cat << EOF >> "$YNH_STDRETURN"
+- name: "_xmpp-client._tcp$suffix"
+  ttl: 3600
+  type: "SRV"
+  value: "0 5 5222 $domain."
+
+- name: "_xmpps-client._tcp$suffix"
+  ttl: 3600
+  type: "SRV"
+  value: "0 5 5223 $domain."
+
+- name: "_xmpp-server._tcp$suffix"
+  ttl: 3600
+  type: "SRV"
+  value: "0 5 5269 $domain."
+
+- name: "_xmpps-server._tcp$suffix"
+  ttl: 3600
+  type: "SRV"
+  value: "0 5 5270 $domain."
+
+- name: "conference$suffix"
+  ttl: 3600
+  type: "CNAME"
+  value: "$domain."
+
+- name: "pubsub$suffix"
+  ttl: 3600
+  type: "CNAME"
+  value: "$domain."
+
+- name: "proxy$suffix"
+  ttl: 3600
+  type: "CNAME"
+  value: "$domain."
 EOF

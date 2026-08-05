@@ -5,7 +5,7 @@ name = "ejabberd"
 description.en = "Robust, scalable and modular XMPP server"
 description.fr = "Serveur XMPP robuste, scalable et modulaire"
 
-version = "24.12~ynh6"
+version = "24.12~ynh7"
 
 maintainers = ["TabTwo"]
 
