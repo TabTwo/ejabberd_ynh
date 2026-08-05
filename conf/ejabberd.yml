@@ -137,6 +137,11 @@ modules:
     put_url: "https://@HOST@:__PORT_HTTP__/upload"
     docroot: "__DATA_DIR__/upload"
     max_size: __HTTP_UPLOAD_SIZE__
+    # XEP-0363: CORS headers so web clients can upload
+    custom_headers:
+      "Access-Control-Allow-Origin": "*"
+      "Access-Control-Allow-Methods": "GET,HEAD,PUT,OPTIONS"
+      "Access-Control-Allow-Headers": "Content-Type"
   mod_last: {}
   mod_mam:
     assume_mam_usage: true
@@ -149,6 +154,7 @@ modules:
     access_mam: [allow]
     default_room_options: {mam: true}
   mod_muc_admin: {}
+  mod_muc_occupantid: {}  # XEP-0421 anonymous unique occupant identifiers
   mod_offline: {access_max_user_messages: 5000}
   mod_ping: {}
   mod_privacy: {}
