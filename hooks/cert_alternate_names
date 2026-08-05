@@ -1,16 +1,18 @@
 # This script is expected to be called xx-$app
 # shellcheck disable=SC2154 # domain and YNH_STDRETURN are provided by the YunoHost hook-calling context
-app=$(basename "$0" | cut -d- -f2)
-app_domain=$(yunohost app setting "$app" domain)
 
-if [[ "$domain" != "$app_domain" ]]
-then
-    exit 0
-fi
+# The XMPP service subdomains (conference./pubsub./upload./proxy.) are intentionally
+# NOT added to the domain's Let's Encrypt certificate.
+#
+# They have no nginx server block of their own, so their HTTP-01 acme-challenge
+# cannot be served (it 302-redirects to the portal). Because YunoHost fails the
+# WHOLE cert request if any single SAN fails validation, listing them here breaks
+# `yunohost domain cert install` entirely and leaves the domain on a self-signed
+# cert. ejabberd presents the main-domain cert for these components via SNI, which
+# clients tolerate for normal use.
+#
+# TODO: to give the subdomains their own valid certs (needed for strict s2s MUC
+# federation from remote servers), first add nginx server blocks for them that
+# serve /.well-known/acme-challenge/, then re-add the relative names here.
 
-cat << EOF >> "$YNH_STDRETURN"
-- conference
-- pubsub
-- upload
-- proxy
-EOF
+exit 0
