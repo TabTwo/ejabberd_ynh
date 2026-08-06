@@ -8,19 +8,45 @@
 app=ejabberd
 config_path=/etc/ejabberd
 
+# Is the coturn app installed on this box? Tests the settings file the
+# ynh_app_setting_get helper actually reads (it hard-fails if the file is missing),
+# which is both cheaper and more accurate than parsing `yunohost app list`.
+_ejabberd_coturn_is_installed() {
+    [ -e /etc/yunohost/apps/coturn/settings.yml ]
+}
+
+# Can we actually fetch coturn_ynh? `yunohost app install coturn` git-clones it from
+# GitHub, and git has no connect timeout of its own: on a box with no (or a black-holed
+# IPv6) route out -- CI containers, firewalled servers -- it stalls ~5 minutes before
+# failing. Probing first with a hard timeout keeps that stall out of every install.
+_ejabberd_coturn_is_reachable() {
+    timeout 30 git ls-remote --exit-code "https://github.com/YunoHost-Apps/coturn_ynh" HEAD >/dev/null 2>&1
+}
+
 # Renders ejabberd.yml + nginx + well-known host-meta, wires coturn (STUN/TURN)
 # and YunoHost cert access. Called (idempotently) by install/upgrade/restore.
 #
 # shellcheck disable=SC2154 # domain, data_dir are set by the YunoHost helpers environment
 _ejabberd_configure() {
 
-    # coturn (auto-installed by scripts/install if absent)
-    # shellcheck disable=SC2034 # turn_host/turn_port/turn_secret feed ynh_config_add substitution
-    turn_secret=$(ynh_app_setting_get --app="coturn" --key=turnserver_pwd)
-    # shellcheck disable=SC2034
-    turn_port=$(ynh_app_setting_get --app="coturn" --key=port_turnserver_tls)
-    # shellcheck disable=SC2034
+    # coturn is a SOFT dependency: scripts/install tries to install it, but a failure
+    # there is non-fatal (a github/catalog hiccup must not sink the whole install).
+    # When it is absent -- or its settings are unreadable -- turn_secret/turn_port stay
+    # empty and conf/ejabberd.yml drops mod_stun_disco entirely (jinja conditional).
+    # ejabberd then runs fine; only STUN/TURN advertisement (XEP-0215) is missing.
+    # shellcheck disable=SC2034 # turn_host/turn_port/turn_secret feed the jinja template
     turn_host="$domain"
+    turn_secret=""
+    turn_port=""
+    if _ejabberd_coturn_is_installed; then
+        turn_secret=$(ynh_app_setting_get --app="coturn" --key=turnserver_pwd) || turn_secret=""
+        turn_port=$(ynh_app_setting_get --app="coturn" --key=port_turnserver_tls) || turn_port=""
+    fi
+    if [ -z "$turn_secret" ] || [ -z "$turn_port" ]; then
+        turn_secret=""
+        turn_port=""
+        ynh_print_warn "coturn is not available: ejabberd will not advertise STUN/TURN (XEP-0215), so audio/video calls between clients behind NAT may fail. Install it later with 'yunohost app install coturn', then re-run 'yunohost app upgrade ejabberd' to pick it up."
+    fi
 
     # Restore custom settings from config panel if any, or setup reasonable default values
     ynh_app_setting_set_default --key=http_upload_size --value="104857600"
@@ -37,8 +63,10 @@ _ejabberd_configure() {
     mkdir -p "$data_dir/upload"
     chown -R ejabberd:ejabberd "$data_dir"
 
-    # Render ejabberd config (ynh_config_add substitutes __PORT_CLIENT__ <- $port_client, etc.)
-    ynh_config_add --template="ejabberd.yml" --destination="/etc/ejabberd/ejabberd.yml"
+    # Render ejabberd config. --jinja (not the simple __VAR__ format) because the
+    # coturn/mod_stun_disco block needs a conditional; shell variables in scope here
+    # ($domain, $port_*, $data_dir, $turn_*, ...) are the jinja context.
+    ynh_config_add --jinja --template="ejabberd.yml" --destination="/etc/ejabberd/ejabberd.yml"
     chown root:ejabberd /etc/ejabberd/ejabberd.yml
     chmod 640 /etc/ejabberd/ejabberd.yml
 

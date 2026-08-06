@@ -29,7 +29,9 @@ If you have another XMPP server installed, uninstall it before installing ejabbe
 
 ## Audio/Video Support
 
-The YunoHost ejabberd package automatically installs and configures **coturn** to provide NAT traversal and TURN (Traversal Using Relays around NAT) relay services for audio and video communications.
+The YunoHost ejabberd package automatically installs and configures **coturn** to provide NAT traversal and TURN (Traversal Using Relays around NAT) relay services for audio and video communications, and advertises it to clients via XEP-0215.
+
+coturn is an *optional* dependency: if it cannot be installed, ejabberd is installed anyway and simply does not advertise STUN/TURN — everything except NAT traversal for audio/video calls keeps working. You can add it later with `yunohost app install coturn` and then run `yunohost app upgrade ejabberd` to have it advertised.
 
 ## Additional Resources
 

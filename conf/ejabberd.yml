@@ -2,11 +2,11 @@ loglevel: info
 log_rotate_count: 0
 
 hosts:
-  - __DOMAIN__
+  - {{ domain }}
 
 certfiles:
-  - "/etc/yunohost/certs/__DOMAIN__/crt.pem"
-  - "/etc/yunohost/certs/__DOMAIN__/key.pem"
+  - "/etc/yunohost/certs/{{ domain }}/crt.pem"
+  - "/etc/yunohost/certs/{{ domain }}/key.pem"
 
 define_macro:
   'TLS_OPTIONS':
@@ -16,14 +16,16 @@ define_macro:
     - "cipher_server_preference"
     - "no_compression"
   # XEP-0157 server contact address (config panel field, empty by default).
-  # Always defined (even when empty) so the config panel can bind directly to this
-  # scalar line via ynh_write_var_in_file; ejabberd resolves the macro reference in
-  # mod_disco.server_info.urls below. Note: when empty, this advertises a single
-  # empty-string URL rather than omitting the server_info entry entirely (this
-  # simple templating format has no conditional-block mechanism to drop the whole
-  # entry) -- harmless (valid, schema-conforming), just not a perfectly empty disco
-  # response. See final-review.md fix report for the full rationale.
-  'XMPP_CONTACT_ADDRESS': "__XMPP_CONTACT_ADDRESS__"
+  # Deliberately NOT wrapped in a jinja conditional: the config panel binds
+  # straight to this scalar line (bind = "XMPP_CONTACT_ADDRESS:...ejabberd.yml")
+  # via ynh_read/write_var_in_file, so the line must exist in the *rendered* file
+  # even when empty -- otherwise the panel can neither read nor set it. ejabberd
+  # resolves the macro reference in mod_disco.server_info.urls below. When empty
+  # this advertises a single empty-string URL instead of omitting the server_info
+  # entry -- harmless (valid, schema-conforming), just not a perfectly empty disco
+  # response. Dropping the entry entirely would require moving the panel to
+  # bind=settings + a scripts/config that re-renders (see TabTwo/ejabberd_ynh).
+  'XMPP_CONTACT_ADDRESS': "{{ xmpp_contact_address }}"
 
 c2s_protocol_options: 'TLS_OPTIONS'
 s2s_protocol_options: 'TLS_OPTIONS'
@@ -36,7 +38,7 @@ ldap_port: 389
 ldap_base: "ou=users,dc=yunohost,dc=org"
 ldap_uids:
   uid: "%u"
-ldap_filter: "(permission=cn=__APP__.main,ou=permission,dc=yunohost,dc=org)"
+ldap_filter: "(permission=cn={{ app }}.main,ou=permission,dc=yunohost,dc=org)"
 
 disable_sasl_mechanisms:
   - "digest-md5"
@@ -45,7 +47,7 @@ s2s_use_starttls: required
 
 listen:
   -
-    port: __PORT_CLIENT__
+    port: {{ port_client }}
     ip: "::"
     module: ejabberd_c2s
     max_stanza_size: 262144
@@ -54,7 +56,7 @@ listen:
     starttls_required: true
     protocol_options: 'TLS_OPTIONS'
   -
-    port: __PORT_CLIENT2__
+    port: {{ port_client2 }}
     ip: "::"
     module: ejabberd_c2s
     max_stanza_size: 262144
@@ -63,13 +65,13 @@ listen:
     tls: true
     protocol_options: 'TLS_OPTIONS'
   -
-    port: __PORT_SERVER__
+    port: {{ port_server }}
     ip: "::"
     module: ejabberd_s2s_in
     max_stanza_size: 524288
     shaper: s2s_shaper
   -
-    port: __PORT_SERVER2__
+    port: {{ port_server2 }}
     ip: "::"
     module: ejabberd_s2s_in
     max_stanza_size: 524288
@@ -77,7 +79,7 @@ listen:
     tls: true
     protocol_options: 'TLS_OPTIONS'
   -
-    port: __PORT_HTTP__
+    port: {{ port_http }}
     ip: "::"
     module: ejabberd_http
     tls: true
@@ -138,9 +140,9 @@ modules:
         urls: ['XMPP_CONTACT_ADDRESS']
   mod_http_api: {}
   mod_http_upload:
-    put_url: "https://@HOST@:__PORT_HTTP__/upload"
-    docroot: "__DATA_DIR__/upload"
-    max_size: __HTTP_UPLOAD_SIZE__
+    put_url: "https://@HOST@:{{ port_http }}/upload"
+    docroot: "{{ data_dir }}/upload"
+    max_size: {{ http_upload_size }}
     # XEP-0363: CORS headers so web clients can upload
     custom_headers:
       "Access-Control-Allow-Origin": "*"
@@ -165,7 +167,7 @@ modules:
   mod_private: {}
   mod_proxy65:
     access: local
-    port: __PORT_PROXY__
+    port: {{ port_proxy }}
     max_connections: 5
   mod_pubsub:
     access_createnode: pubsub_createnode
@@ -180,6 +182,11 @@ modules:
   mod_s2s_dialback: {}
   mod_shared_roster: {}
   mod_stream_mgmt: {resend_on_timeout: if_offline}
+{% if turn_secret and turn_port %}
+  # STUN/TURN (XEP-0215) is advertised only when coturn is available -- coturn is a
+  # SOFT dependency (scripts/install tries to install it, a failure is non-fatal), so
+  # _common.sh leaves turn_secret/turn_port empty when it is absent and this whole
+  # module is then dropped: ejabberd runs fine, only NAT-traversal for A/V is missing.
   mod_stun_disco:
     credentials_lifetime: 12h
     # coturn shares a REST auth secret (turnserver_pwd); ejabberd generates matching
@@ -187,19 +194,20 @@ modules:
     # per-service); the TURN service is marked `restricted` so it requires them.
     # _common.sh reads coturn's port_turnserver_tls, so services are the TLS variants
     # (type stuns/turns, transport tcp).
-    secret: "__TURN_SECRET__"
+    secret: "{{ turn_secret }}"
     services:
       -
-        host: __TURN_HOST__
-        port: __TURN_PORT__
+        host: {{ turn_host }}
+        port: {{ turn_port }}
         type: stuns
         transport: tcp
       -
-        host: __TURN_HOST__
-        port: __TURN_PORT__
+        host: {{ turn_host }}
+        port: {{ turn_port }}
         type: turns
         transport: tcp
         restricted: true
+{% endif %}
   mod_vcard: {search: false}
   mod_vcard_xupdate: {}
   mod_version: {}
