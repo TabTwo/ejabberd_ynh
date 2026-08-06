@@ -32,6 +32,7 @@ ynh_backup "$data_dir"
 
 ynh_backup "/etc/nginx/conf.d/${domain}.d/ejabberd.conf"
 ynh_backup "/var/www/.well-known/${domain}/host-meta"
+ynh_backup "/var/www/.well-known/${domain}/host-meta.json"
 
 #=================================================
 # END OF SCRIPT

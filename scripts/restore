@@ -21,14 +21,32 @@ ynh_script_progression "Restoring the app files..."
 ynh_restore_everything
 
 #=================================================
+# REPAIR OWNERSHIP AND MODES
+#=================================================
+# ynh_restore hands every restored path back with YunoHost's restrictive default
+# permissions (root:root, no group/traversal bits). For an app whose daemon runs as its
+# own user that is fatal: ejabberd could not read /etc/ejabberd/ejabberd.yml, nor even
+# `cd` into its mnesia spool, and systemd start failed with "ERROR: can not access
+# directory /var/lib/ejabberd". Re-assert what the Debian package ships:
+#   /etc/ejabberd   750 root:ejabberd     (config, files 640 -- readable by the daemon)
+#   /var/lib/...    700 ejabberd:ejabberd (mnesia spool, owner-only)
+#   $data_dir       750 ejabberd:ejabberd (http_upload docroot)
+# shellcheck disable=SC2154 # data_dir is set by the YunoHost helpers environment
+ynh_script_progression "Restoring file ownership and permissions..."
+
+chown -R root:ejabberd "$config_path"
+chmod -R u=rwX,g=rX,o= "$config_path"
+
+chown -R ejabberd:ejabberd "/var/lib/$app" "$data_dir"
+chmod -R u=rwX,g=rX,o= "/var/lib/$app" "$data_dir"
+chmod 700 "/var/lib/$app"
+
+#=================================================
 # RE-RENDER CONFIG (coturn secret / ports may have changed since backup time)
 #=================================================
-# shellcheck disable=SC2154 # data_dir is set by the YunoHost helpers environment
 ynh_script_progression "Reconfiguring ejabberd and NGINX..."
 
 _ejabberd_configure
-
-chown -R ejabberd:ejabberd /var/lib/ejabberd "$data_dir"
 
 #=================================================
 # INTEGRATE SERVICE IN YUNOHOST
