@@ -28,8 +28,10 @@ yunohost = ">= 13.0"
 helpers_version = "2.1"
 architectures = "all"
 multi_instance = false
+
 ldap = true
 sso = false          # XMPP clients auth via LDAP directly, not the SSO portal
+
 disk = "50M"
 ram.build = "50M"
 ram.runtime = "256M"
