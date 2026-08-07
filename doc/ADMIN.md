@@ -35,6 +35,21 @@ ejabberdctl dump_table table_name > /tmp/dump.txt
 
 For a complete list of available commands, see the [ejabberdctl documentation](https://docs.ejabberd.im/admin/guide/managing/).
 
+## Server contact address (XEP-0157)
+
+Set a contact address in the app's configuration panel (*Server contact*), for example
+`mailto:you@example.org` or `xmpp:admin@example.org`. It is advertised as the server's
+abuse and admin contact, so other operators have somewhere to write when something goes
+wrong on your server — spam, abuse, a broken federation link.
+
+While no address is configured, ejabberd advertises **no** contact entry at all. That is
+deliberate: an empty entry is worse than none, because it looks like an answer. It does
+mean an unconfigured server does not satisfy XEP-0157, which compliance testers such as
+the [XMPP Compliance Suite](https://compliance.conversations.im/) check for — so if you
+care about that score, set an address you actually read.
+
+Changing the field re-renders the configuration and restarts ejabberd once.
+
 ## Data Storage
 
 ### Message Archive Management (MAM)

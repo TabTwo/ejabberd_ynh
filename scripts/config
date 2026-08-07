@@ -1,0 +1,26 @@
+#!/bin/bash
+
+# shellcheck disable=SC1091,SC2154 # helpers + app are provided by the YunoHost runtime
+source _common.sh
+source /usr/share/yunohost/helpers
+
+# The config panel stores its values as app settings (config_panel.toml declares no
+# `bind`), so applying them means re-rendering the config from the template -- the same
+# _ejabberd_configure() that install, upgrade and restore already use. One code path
+# writes /etc/ejabberd/ejabberd.yml, and because the template is rendered rather than
+# edited in place, it can drop whole blocks: with no XEP-0157 contact address set, the
+# mod_disco server_info entries disappear instead of advertising an empty URL.
+#
+# The restart is explicit (rather than via `services = [...]` in the panel) so it happens
+# exactly once, after the re-render, and waits for ejabberd to report itself started.
+ynh_app_config_apply() {
+    _ynh_app_config_apply
+
+    ynh_script_progression "Re-rendering the ejabberd configuration..."
+    _ejabberd_configure
+
+    ynh_script_progression "Restarting ejabberd..."
+    ynh_systemctl --service="$app" --action="restart" --wait_until="is started"
+}
+
+ynh_app_config_run "$1"
