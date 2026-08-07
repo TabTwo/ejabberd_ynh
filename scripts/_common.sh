@@ -5,7 +5,6 @@
 #=================================================
 
 # shellcheck disable=SC2034 # app/config_path are consumed by scripts that source this file
-app=ejabberd
 config_path=/etc/ejabberd
 
 # Is the coturn app installed on this box? Tests the settings file the
