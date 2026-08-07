@@ -15,17 +15,14 @@ define_macro:
     - "no_tlsv1_1"
     - "cipher_server_preference"
     - "no_compression"
-  # XEP-0157 server contact address (config panel field, empty by default).
-  # Deliberately NOT wrapped in a jinja conditional: the config panel binds
-  # straight to this scalar line (bind = "XMPP_CONTACT_ADDRESS:...ejabberd.yml")
-  # via ynh_read/write_var_in_file, so the line must exist in the *rendered* file
-  # even when empty -- otherwise the panel can neither read nor set it. ejabberd
-  # resolves the macro reference in mod_disco.server_info.urls below. When empty
-  # this advertises a single empty-string URL instead of omitting the server_info
-  # entry -- harmless (valid, schema-conforming), just not a perfectly empty disco
-  # response. Dropping the entry entirely would require moving the panel to
-  # bind=settings + a scripts/config that re-renders (see TabTwo/ejabberd_ynh).
+{% if xmpp_contact_address %}
+  # XEP-0157 server contact address (config panel field, unset by default). Defined
+  # only when the admin has set one: mod_disco.server_info below is guarded by the
+  # same condition, so an unconfigured server advertises no contact entry at all
+  # rather than one pointing at an empty URL. The panel stores this as an app setting
+  # and scripts/config re-renders this file, so nothing reads the line back out of it.
   'XMPP_CONTACT_ADDRESS': "{{ xmpp_contact_address }}"
+{% endif %}
 
 c2s_protocol_options: 'TLS_OPTIONS'
 s2s_protocol_options: 'TLS_OPTIONS'
@@ -126,9 +123,10 @@ modules:
   mod_carboncopy: {}
   mod_client_state: {}
   mod_configure: {}
+{% if xmpp_contact_address %}
+  # XEP-0157: advertise the contact address the admin configured in the config panel
+  # ('XMPP_CONTACT_ADDRESS' macro, defined above under the same condition).
   mod_disco:
-    # XEP-0157 server contact address; 'XMPP_CONTACT_ADDRESS' macro is defined above
-    # (empty string by default). See the config-panel field xmpp_contact_address.
     server_info:
       -
         modules: all
@@ -138,6 +136,9 @@ modules:
         modules: all
         name: "admin-addresses"
         urls: ['XMPP_CONTACT_ADDRESS']
+{% else %}
+  mod_disco: {}
+{% endif %}
   mod_http_api: {}
   mod_http_upload:
     put_url: "https://@HOST@:{{ port_http }}/upload"
